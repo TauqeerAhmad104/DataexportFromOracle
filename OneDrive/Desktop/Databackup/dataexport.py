@@ -29,7 +29,7 @@ def fetch_data_in_chunks(query, chunk_size):
             rows = cursor.fetchmany(chunk_size)
             if not rows:
                 break
-            yield rows
+            yield rows, [desc[0] for desc in cursor.description]
         
         logging.info("Closing connection...")
         cursor.close()
@@ -53,10 +53,9 @@ def main():
 
     first_chunk = True
 
-    for chunk in fetch_data_in_chunks(query, chunk_size):
+    for chunk, column_names in fetch_data_in_chunks(query, chunk_size):
         logging.info(f"Processing chunk with {len(chunk)} rows")
         
-        column_names = [desc[0] for desc in cursor.description]
         df_chunk = pd.DataFrame(chunk, columns=column_names)
 
         # Convert DataFrame to Arrow Table
