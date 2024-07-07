@@ -58,8 +58,17 @@ def main():
         
         df_chunk = pd.DataFrame(chunk, columns=column_names)
 
-        # Convert DataFrame to Arrow Table
-        table = pa.Table.from_pandas(df_chunk)
+        # Ensure data types are compatible with Arrow Table
+        for column in df_chunk.columns:
+            if pd.api.types.is_object_dtype(df_chunk[column]):
+                df_chunk[column] = df_chunk[column].astype(str)
+
+        try:
+            # Convert DataFrame to Arrow Table
+            table = pa.Table.from_pandas(df_chunk)
+        except Exception as e:
+            logging.error(f"Error converting DataFrame to Arrow Table: {e}")
+            continue
 
         # Write to Parquet file
         if first_chunk:
